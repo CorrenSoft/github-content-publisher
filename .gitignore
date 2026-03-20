@@ -1,0 +1,3 @@
+# Minimal recommended ignore
+*.log
+.DS_Store

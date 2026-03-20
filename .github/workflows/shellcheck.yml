@@ -1,0 +1,12 @@
+name: Lint - Shell
+on: [push, pull_request]
+
+jobs:
+  shellcheck:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: sudo apt-get install -y shellcheck
+      - run: shellcheck ./**/*.sh || true

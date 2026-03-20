@@ -1,0 +1,17 @@
+name: Example Composite Action
+description: A starter composite action template
+
+
+inputs:
+  example-input:
+    description: "Example input"
+    required: false
+    default: "hello"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Print input
+      shell: bash
+      run: |
+        echo "Input: ${{ inputs.example-input }}"
