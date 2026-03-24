@@ -82,7 +82,7 @@ function Invoke-GhApi {
       if ($null -ne $v) { $arguments += @('--field', "$k=$v") }
     }
   }
-  # Write-Host "gh $($arguments -join ' ')"  # debug
+  
   $json = & gh @arguments 2>&1
   if ($LASTEXITCODE -ne 0) {
     Write-ErrorOrWarning "gh api failed ($Method $Route):`n$json"
@@ -95,7 +95,6 @@ function Invoke-GhApi {
 }
 
 # ----- Channel implementations -----
-
 function Publish-Summary {
   $ctx = Get-RepoContext; if (-not $ctx) { return }
   $content = Read-Body
@@ -139,18 +138,19 @@ function Get-MarkerLine {
 }
 
 function Publish-PR {
+  Write-Host "::group::PullRequest"
   $ctx = Get-RepoContext; if (-not $ctx) { return }
 
   if ( $PrNumber) {
     $pr = $PrNumber 
   }
   else {
+    Write-Host $env:GITHUB_EVENT_NAME
     if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
       $payload = Get-EventPayload
-      $n = $Payload?.pull_request?.number
-      if ($n) { return [int]$n }
+      $pr = $Payload?.pull_request?.number
+      Write-Host $payload
     }
-    $pr = Resolve-PRNumber -Payload $payload
   }
   if (-not $pr) { Write-ErrorOrWarning "Cannot resolve PR number. Pass 'pr-number'."; return }
 
@@ -212,9 +212,11 @@ function Publish-PR {
   }
 
   Write-OutputVar 'channel' 'pull-request'
+  Write-Host "::endgroup::"
 }
 
 function Publish-CheckRun {
+  Write-Host "::group::CheckRun"
   $ctx = Get-RepoContext; if (-not $ctx) { return }
 
   $raw = Read-Body
@@ -257,6 +259,7 @@ function Publish-CheckRun {
   $conclusion = 'success'
 
   if ($existing) {
+    Write-Host "Patching repos/$($ctx.Owner)/$($ctx.Repo)/check-runs/$($existing.id)"
     $upd = Invoke-GhApi -Method 'PATCH' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/check-runs/$($existing.id)" -Fields @{
       "status"          = "completed";
       "conclusion"      = $conclusion;
@@ -269,6 +272,7 @@ function Publish-CheckRun {
     }
   }
   else {
+    Write-Host "Creating..."
     $crt = Invoke-GhApi -Method 'POST' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/check-runs" -Fields @{
       "name"            = $checkName;
       "head_sha"        = $sha;
@@ -285,6 +289,7 @@ function Publish-CheckRun {
 
   Write-OutputVar 'channel' 'check-run'
   Write-OutputVar 'mode-effective' $effMode
+  Write-Host "::endgroup::"
 }
 
 # ----- Dispatcher -----

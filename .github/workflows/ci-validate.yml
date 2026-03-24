@@ -1,7 +1,6 @@
 name: CI Validate
 
 on:
-  push:
   pull_request:
 
 permissions:
