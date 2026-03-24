@@ -1,4 +1,3 @@
-
 name: CI Validate
 
 on:
@@ -9,16 +8,18 @@ permissions:
   contents: read
 
 jobs:
-  workflow-lint:
-    name: actionlint
+  yamllint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install actionlint
-        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
-      - name: Run actionlint
-        run: actionlint -color
-
+      - uses: ibiqlik/action-yamllint@v3
+        with:
+          config_data: |
+            extends: default
+            rules:
+              document-start: disable
+              line-length: disable
+  
   ps-lint:
     name: PSScriptAnalyzer (PowerShell)
     runs-on: ubuntu-latest
@@ -32,3 +33,13 @@ jobs:
             Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -ErrorAction Stop
           }
           Invoke-ScriptAnalyzer -Path ./src -Recurse -Severity Error -EnableExit
+  
+  workflow-lint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
+      - name: Run actionlint
+        run: ~/go/bin/actionlint -color

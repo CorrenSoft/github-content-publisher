@@ -1,9 +1,9 @@
-name: "Content Publisher"
-description: "Publish content to GitHub surfaces (pull request comment, job summary, check run) with add/upsert/replace/append modes and optional garbage collector."
-author: "CorrenSoft"
+name: Content Publisher
+description: "Publish content to GitHub surfaces with add/upsert/replace/append modes and optional garbage collector."
+author: CorrenSoft
 branding:
-  icon: "message-square"
-  color: "blue"
+  icon: message-square
+  color: blue
 
 inputs:
   channel:
@@ -31,11 +31,11 @@ inputs:
   garbage-collector:
     description: "If true, delete duplicates of the same marker (keeps the most recent)."
     required: false
-    default: "false"
+    default: false
   fail-on-error:
     description: "If false, do not fail the job on publishing error."
     required: false
-    default: "true"
+    default: true
   github-token:
     description: "Optional token to override default GITHUB_TOKEN/GH_TOKEN."
     required: false
@@ -46,9 +46,9 @@ outputs:
   channel:
     description: "Echo of the channel."
   resource-id:
-    description: "Created/updated resource id (comment_id or check_run_id)."
+    description: "Created/updated resource id."
   mode-effective:
-    description: "Effective mode (e.g., upsert for check-run)."
+    description: "Effective mode."
 
 runs:
   using: "composite"

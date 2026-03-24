@@ -3,6 +3,7 @@
 Publish content to GitHub surfaces with modes `add | upsert | replace | append`, and optional garbage collection of duplicates.  
 
 Channels supported:
+
 - `pull-request` → sticky or non-sticky **PR comment**.
 - `summary` → **Job Summary** (`$GITHUB_STEP_SUMMARY`) of the current job.
 - `check-run` → always **upsert** a **Check Run** output for the current commit (uses the body as the check’s summary).
@@ -94,4 +95,4 @@ steps:
 ## Notes
 
 - The marker is only added at the beginning on the first publication; subsequent append operations keep a single marker and add the separator + new content.
-- The Action do not attempt to parse or manipulate the content; it simply adds the marker and separator (when applies). Neither control the lenght of the content, which may cause API rejections if too long. 
+- The Action do not attempt to parse or manipulate the content; it simply adds the marker and separator (when applies). Neither control the lenght of the content, which may cause API rejections if too long.
