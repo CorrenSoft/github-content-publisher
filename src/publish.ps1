@@ -36,6 +36,7 @@ function Get-RepoContext {
 
 function Get-EventPayload {
   if (-not (Test-Path -Path $env:GITHUB_EVENT_PATH)) { return $null }
+  Write-Host (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH)
   try { (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json) } catch { $null }
 }
 
@@ -154,6 +155,7 @@ function Publish-PR {
   }
   if (-not $pr) { Write-ErrorOrWarning "Cannot resolve PR number. Pass 'pr-number'."; return }
 
+  Write-Host $Mode
   $raw = Read-Body
   if ([string]::IsNullOrEmpty($raw)) { Write-ErrorOrWarning "Empty body for pull-request"; return }
 
@@ -172,6 +174,7 @@ function Publish-PR {
   $found, $dups = Find-PRCommentByMarker -Owner $ctx.Owner -Repo $ctx.Repo -Number $pr -Marker $markerLine
   if ($GarbageCollector) {
     foreach ($d in $Duplicates) {
+      Write-Host "Deleting duplicates."
       Invoke-GhApi -Method 'DELETE' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/issues/comments/$($d.id)" -Fields @{}
     }
   }
