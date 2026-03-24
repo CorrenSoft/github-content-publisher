@@ -19,7 +19,7 @@ jobs:
             rules:
               document-start: disable
               line-length: disable
-  
+
   ps-lint:
     name: PSScriptAnalyzer (PowerShell)
     runs-on: ubuntu-latest
@@ -33,7 +33,7 @@ jobs:
             Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -ErrorAction Stop
           }
           Invoke-ScriptAnalyzer -Path ./src -Recurse -Severity Error -EnableExit
-  
+
   workflow-lint:
     name: actionlint
     runs-on: ubuntu-latest

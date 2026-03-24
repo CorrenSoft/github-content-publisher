@@ -39,16 +39,6 @@ function Get-EventPayload {
   try { (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json) } catch { $null }
 }
 
-function Resolve-PRNumber {
-  param([object]$Payload)
-  if ($PrNumber) { return [int]$PrNumber }
-  if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
-    $n = $Payload?.pull_request?.number
-    if ($n) { return [int]$n }
-  }
-  return $null
-}
-
 function Read-Body {
   if ($Body -and $Body.Trim().Length -gt 0) { return $Body }
   if ($BodyFile) {
@@ -149,14 +139,23 @@ function Get-MarkerLine {
 }
 
 function Publish-PR {
-  $payload = Get-EventPayload
   $ctx = Get-RepoContext; if (-not $ctx) { return }
-  $pr = Resolve-PRNumber -Payload $payload
+
+  if ( $PrNumber) {
+    $pr = $PrNumber 
+  }
+  else {
+    if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
+      $payload = Get-EventPayload
+      $n = $Payload?.pull_request?.number
+      if ($n) { return [int]$n }
+    }
+    $pr = Resolve-PRNumber -Payload $payload
+  }
   if (-not $pr) { Write-ErrorOrWarning "Cannot resolve PR number. Pass 'pr-number'."; return }
 
   $raw = Read-Body
   if ([string]::IsNullOrEmpty($raw)) { Write-ErrorOrWarning "Empty body for pull-request"; return }
-
 
   $createBody = Add-Marker $raw 
   if ($Mode -eq 'add') {
@@ -225,7 +224,7 @@ function Publish-CheckRun {
   $effMode = 'upsert'
 
   # Compute content
-  $summary = if ($MarkerId) { Add-Marker$raw } else { $raw }
+  $summary = if ($MarkerId) { Add-Marker $raw } else { $raw }
   
   $payload = Get-EventPayload
   $headSha = $payload?.pull_request?.head?.sha
