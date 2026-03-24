@@ -1,0 +1,30 @@
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create GitHub Release with gh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF##*/}"
+          NAME="Content Publisher ${TAG}"
+          NOTES="Automated release for ${TAG}."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists. Updating notes..."
+            gh release edit "$TAG" --notes "$NOTES" --title "$NAME"
+          else
+            gh release create "$TAG" --title "$NAME" --notes "$NOTES"
+          fi
