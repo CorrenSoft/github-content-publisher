@@ -37,7 +37,7 @@ function Get-RepoContext {
 function Get-EventPayload {
   if (Test-Path -Path $env:GITHUB_EVENT_PATH) {
     try { 
-      return (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json) 
+      return (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json -Depth 10) 
     }
     catch { 
       Write-ErrorOrWarning "Unable to retrieve the event details: $_"
@@ -156,6 +156,8 @@ function Publish-PR {
       $payload = Get-EventPayload
       $pr = $Payload?.number
       Write-Host $payload
+      Write-Host $Payload?.number
+      Write-Host $pr
     }
   }
   if (-not $pr) { Write-ErrorOrWarning "Cannot resolve PR number. Pass 'pr-number'."; return }
@@ -280,12 +282,11 @@ function Publish-CheckRun {
   else {
     Write-Host "Creating..."
     $crt = Invoke-GhApi -Method 'POST' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/check-runs" -Fields @{
-      "name"            = $checkName;
-      "head_sha"        = $sha;
-      "status"          = "completed";
-      "conclusion"      = $conclusion;
-      "output[title]"   = $checkName;
-      "output[summary]" = $summary
+      "name"          = $checkName;
+      "head_sha"      = $sha;
+      "status"        = "completed";
+      "conclusion"    = $conclusion;
+      "output[title]" = $summary
     }
     Write-Host $crt
     if ($crt) {
