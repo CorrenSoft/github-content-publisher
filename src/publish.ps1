@@ -115,7 +115,7 @@ function Publish-Summary {
 
 function Find-PRCommentByMarker {
   param([string]$Owner, [string]$Repo, [int]$Number, [string]$Marker)
-  # Paginate comments until we find the first starting with the marker
+  Write-Host "Looking for comments."
   $page = 1; $per = 100
   $found = $null
   $dups = @()
@@ -131,7 +131,8 @@ function Find-PRCommentByMarker {
     if ($items.Count -lt $per) { break }
     $page++
   }
-  return , @($found, $dups)  # tuple
+  Write-Host "Found: $found"
+  return , @($found, $dups) 
 }
 
 function Get-MarkerLine {
@@ -154,10 +155,10 @@ function Publish-PR {
   else {
     if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
       $payload = Get-EventPayload
-      $pr = $payload.number
-      Write-Host $Payload
-      Write-Host $payload.number
-      Write-Host $pr
+      if (-not $payload) {
+        $pr = $payload.number
+        Write-Host $payload.pull_request.number
+      }
     }
   }
   if (-not $pr) { Write-ErrorOrWarning "Cannot resolve PR number. Pass 'pr-number'."; return }
@@ -190,15 +191,18 @@ function Publish-PR {
   switch ($Mode) {
     'upsert' {
       if ($found) {
+        Write-Host "Editing Comment."
         $rsp = Invoke-GhApi -Method 'PATCH' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/issues/comments/$($found.id)" -Fields @{ 'body' = $createBody }
       }
       else {
+        Write-Host "Inserting Comment."
         $rsp = Invoke-GhApi -Method 'POST' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/issues/$pr/comments" -Fields @{ 'body' = $createBody }
       }
       if ($rsp) { Write-OutputVar 'resource-id' "$($rsp.id)"; Write-OutputVar 'published' 'true' }
       Write-OutputVar 'mode-effective' 'upsert'
     }
     'replace' {
+      Write-Host "Replacing Comment."
       if ($found) { Invoke-GhApi -Method 'DELETE' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/issues/comments/$($found.id)" -Fields @{} }
       $rsp = Invoke-GhApi -Method 'POST' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/issues/$pr/comments" -Fields @{ 'body' = $createBody }
       if ($rsp) { Write-OutputVar 'resource-id' "$($rsp.id)"; Write-OutputVar 'published' 'true' }
@@ -237,7 +241,14 @@ function Publish-CheckRun {
 
   # Compute content
   $summary = $raw 
-  # if ($MarkerId) { Add-Marker $raw } else { $raw }
+  $job_id = $env:GITHUB_JOB
+
+  Invoke-GhApi -Method 'PATCH' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/check-runs/$job_id" -Fields @{
+    "output[title]"   = $summary;
+    "output[summary]" = $summary
+  }
+
+  return
 
   $sha = $env:GITHUB_SHA
   $checkName = "Content Publisher"

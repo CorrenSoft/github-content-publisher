@@ -43,7 +43,23 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v6
-      - name: Use local action (PR sticky upsert)
+      - name: Use local action (PR comment)
+        uses: ./.
+        with:
+          channel: pull-request
+          mode: add
+          marker-id: self-test
+          body: |
+            **Content Publisher** self-test. Add mode.
+      - name: Use local action (PR comment)
+        uses: ./.
+        with:
+          channel: pull-request
+          mode: append
+          marker-id: self-test
+          body: |
+            **Content Publisher** self-test. Add mode.
+      - name: Use local action (PR comment)
         uses: ./.
         with:
           channel: pull-request
@@ -51,3 +67,12 @@ jobs:
           marker-id: self-test
           body: |
             Hello from **Content Publisher** self-test. This is an idempotent PR comment.
+      - name: Use local action (PR comment)
+        uses: ./.
+        with:
+          channel: pull-request
+          mode: replace
+          marker-id: self-test
+          garbage-collector: true
+          body: |
+            **Content Publisher** self-test. This is an idempotent PR comment in replace mode.
