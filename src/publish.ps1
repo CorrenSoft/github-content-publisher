@@ -35,15 +35,16 @@ function Get-RepoContext {
 }
 
 function Get-EventPayload {
+  $content = $null
   if (Test-Path -Path $env:GITHUB_EVENT_PATH) {
     try { 
-      return (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json -Depth 10) 
+      $content = (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json -Depth 10) 
     }
     catch { 
       Write-ErrorOrWarning "Unable to retrieve the event details: $_"
     }
   }
-  return $null 
+  return $content
 }
 
 function Read-Body {
@@ -59,25 +60,6 @@ function Add-Marker {
   param([string]$Content)
   $marker = Get-MarkerLine
   return "$marker`n$Content"
-}
-
-function Remove-DuplicatedMarker {
-  param([string]$Content)
-  if ([string]::IsNullOrEmpty($MarkerId)) { return $Content }
-  $marker = "<!-- content-publisher: $MarkerId -->"
-  # Keep only the very first marker occurrence
-  $lines = $Content -split "`n"
-  $seen = $false
-  $result = foreach ($l in $lines) {
-    if ($l -eq $marker) {
-      if (-not $seen) { $seen = $true; $l }
-      # skip duplicated markers
-    }
-    else {
-      $l
-    }
-  }
-  return ($result -join "`n")
 }
 
 function Invoke-GhApi {
@@ -155,10 +137,8 @@ function Publish-PR {
   else {
     if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
       $payload = Get-EventPayload
-      if (-not $payload) {
-        $pr = $payload.number
-        Write-Host $payload.pull_request.number
-      }
+      $pr = $payload.number
+      Write-Host $payload.pull_request.$Number
     }
   }
   if (-not $pr) { Write-ErrorOrWarning "Cannot resolve PR number. Pass 'pr-number'."; return }
@@ -241,7 +221,25 @@ function Publish-CheckRun {
 
   # Compute content
   $summary = $raw 
-  $job_id = $env:GITHUB_JOB
+
+  $jobs = Invoke-GhApi -Method 'GET' -Route "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID/attempts/$env:GITHUB_RUN_ATTEMPT/jobs" 
+  Write-Host $jobs
+
+  $jobs = $jobs | ConvertFrom-Json
+
+  # Try to find the matching job
+  $match = $jobs.jobs |
+  Where-Object {
+    (($_.name.ToLower() -replace '[-_]', ' ') -eq ($env:GITHUB_JOB.ToLower() -replace '[-_]', ' '))
+  } |
+  Select-Object -First 1
+
+  if ($match) {
+    $job_id = $match.id
+  }
+  else {
+    $job_id = $wf.jobs[0].id
+  }
 
   Invoke-GhApi -Method 'PATCH' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/check-runs/$job_id" -Fields @{
     "output[title]"   = $summary;
