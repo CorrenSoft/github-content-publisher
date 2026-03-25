@@ -35,9 +35,15 @@ function Get-RepoContext {
 }
 
 function Get-EventPayload {
-  if (-not (Test-Path -Path $env:GITHUB_EVENT_PATH)) { return $null }
-  Write-Host (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH)
-  try { (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json) } catch { $null }
+  if (Test-Path -Path $env:GITHUB_EVENT_PATH) {
+    try { 
+      return (Get-Content -Raw -Path $env:GITHUB_EVENT_PATH | ConvertFrom-Json) 
+    }
+    catch { 
+      Write-ErrorOrWarning "Unable to retrieve the event details: $_"
+    }
+  }
+  return $null 
 }
 
 function Read-Body {
@@ -142,12 +148,10 @@ function Publish-PR {
   Write-Host "::group::PullRequest"
   $ctx = Get-RepoContext; if (-not $ctx) { return }
 
-  Write-Host $ctx
   if ( $PrNumber) {
     $pr = $PrNumber 
   }
   else {
-    Write-Host $env:GITHUB_EVENT_NAME
     if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
       $payload = Get-EventPayload
       $pr = $Payload?.number
@@ -230,7 +234,8 @@ function Publish-CheckRun {
   $effMode = 'upsert'
 
   # Compute content
-  $summary = if ($MarkerId) { Add-Marker $raw } else { $raw }
+  $summary = $raw 
+  # if ($MarkerId) { Add-Marker $raw } else { $raw }
 
   $sha = $env:GITHUB_SHA
   $checkName = "Content Publisher"
