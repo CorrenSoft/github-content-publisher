@@ -139,7 +139,7 @@ function Get-MarkerLine {
     $id = $MarkerId 
   }
   else {
-    $id = "WORKFLOW:$env:GITHUB_REPOSITORY"
+    $id = "WORKFLOW: $env:GITHUB_REPOSITORY"
   }
   return "<!-- content-publisher: $id -->" 
 }
@@ -154,9 +154,9 @@ function Publish-PR {
   else {
     if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
       $payload = Get-EventPayload
-      $pr = $Payload?.number
-      Write-Host $payload
-      Write-Host $Payload?.number
+      $pr = $payload.number
+      Write-Host $Payload
+      Write-Host $payload.number
       Write-Host $pr
     }
   }
@@ -282,11 +282,12 @@ function Publish-CheckRun {
   else {
     Write-Host "Creating..."
     $crt = Invoke-GhApi -Method 'POST' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/check-runs" -Fields @{
-      "name"          = $checkName;
-      "head_sha"      = $sha;
-      "status"        = "completed";
-      "conclusion"    = $conclusion;
-      "output[title]" = $summary
+      "name"            = $checkName;
+      "head_sha"        = $sha;
+      "status"          = "completed";
+      "conclusion"      = $conclusion;
+      "output[title]"   = $summary;
+      "output[summary]" = $summary
     }
     Write-Host $crt
     if ($crt) {
