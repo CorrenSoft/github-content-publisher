@@ -225,12 +225,10 @@ function Publish-CheckRun {
   $jobs = Invoke-GhApi -Method 'GET' -Route "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID/attempts/$env:GITHUB_RUN_ATTEMPT/jobs" 
   Write-Host $jobs
 
-  $jobs = $jobs | ConvertFrom-Json
-
   # Try to find the matching job
   $match = $jobs.jobs |
   Where-Object {
-    (($_.name.ToLower() -replace '[-_]', ' ') -eq ($env:GITHUB_JOB.ToLower() -replace '[-_]', ' '))
+    (($_.name.ToLower()) -eq ($env:GITHUB_JOB.ToLower()))
   } |
   Select-Object -First 1
 
@@ -238,7 +236,7 @@ function Publish-CheckRun {
     $job_id = $match.id
   }
   else {
-    $job_id = $wf.jobs[0].id
+    $job_id = $jobs.jobs[0].id
   }
 
   Invoke-GhApi -Method 'PATCH' -Route "repos/$($ctx.Owner)/$($ctx.Repo)/check-runs/$job_id" -Fields @{
