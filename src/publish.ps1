@@ -142,6 +142,7 @@ function Publish-PR {
   Write-Host "::group::PullRequest"
   $ctx = Get-RepoContext; if (-not $ctx) { return }
 
+  Write-Host $ctx
   if ( $PrNumber) {
     $pr = $PrNumber 
   }
@@ -149,7 +150,7 @@ function Publish-PR {
     Write-Host $env:GITHUB_EVENT_NAME
     if ($env:GITHUB_EVENT_NAME -in @('pull_request', 'pull_request_target')) {
       $payload = Get-EventPayload
-      $pr = $Payload?.pull_request?.number
+      $pr = $Payload?.number
       Write-Host $payload
     }
   }
@@ -230,11 +231,8 @@ function Publish-CheckRun {
 
   # Compute content
   $summary = if ($MarkerId) { Add-Marker $raw } else { $raw }
-  
-  $payload = Get-EventPayload
-  $headSha = $payload?.pull_request?.head?.sha
 
-  $sha = $headSha ? $headSha : $env:GITHUB_SHA
+  $sha = $env:GITHUB_SHA
   $checkName = "Content Publisher"
 
   # Try to find existing check run for this commit & name
@@ -284,6 +282,7 @@ function Publish-CheckRun {
       "output[title]"   = $checkName;
       "output[summary]" = $summary
     }
+    Write-Host $crt
     if ($crt) {
       Write-OutputVar 'published' 'true'
       Write-OutputVar 'resource-id' "$($crt.id)"
