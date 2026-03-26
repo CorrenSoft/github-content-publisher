@@ -186,9 +186,11 @@ function Publish-PR {
 
   
   if ($GarbageCollector -eq $True) {
+    Write-Host "Garbage collector active."
     foreach ($d in $duplicates) {
-      Write-Host "Deleting duplicates."
-      Invoke-GhApi -Method 'DELETE' -Route "repos/$env:GITHUB_REPOSITORY/issues/comments/$($d.id)" -Fields @{}
+      Write-Host "Deleting $($d.id)"
+      $rsp = Invoke-GhApi -Method 'DELETE' -Route "repos/$env:GITHUB_REPOSITORY/issues/comments/$($d.id)" -Fields @{}
+      Write-Host $rsp
     }
   }
 
