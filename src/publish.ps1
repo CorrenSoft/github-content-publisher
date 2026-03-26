@@ -28,30 +28,26 @@ function Find-PRCommentByMarker {
   while ($true) {
     $route = "repos/$env:GITHUB_REPOSITORY/issues/$Number/comments?per_page=$per&page=$page"
     $items = Invoke-GhApi -Method 'GET' -Route $route -Fields @{}
-    Write-Host $items
-    if (-not $items -or $items.Count -eq 0) { break }
+
+    if ($null -eq $items) { break }
+
     foreach ($c in $items) {
       if ($c.body -and $c.body.StartsWith($Marker)) {
-        if ( $found) {
+        if ($found) {
           $dups += $c 
         }
         else { 
           $found = $c 
+          Write-Host "Found comment $($found.id)."
         }
       }
     }
     if ($items.Count -lt $per) { break }
     $page++
   }
-  if ($null -eq $found) {
-    Write-Host "Found comment $($found.id)."
-    if ($dups.Length -gt 0 ) {
-      Write-Host "Also found $($dups.Length) duplicated."
-    }
-  }
-  else {
-    Write-Host "Found no comment."
-  }
+
+  Write-Host "Found $($dups.Length) duplicated."
+  
   return , @($found, $dups) 
 }
 
