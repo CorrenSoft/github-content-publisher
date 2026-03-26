@@ -28,6 +28,7 @@ function Find-PRCommentByMarker {
   while ($true) {
     $route = "repos/$env:GITHUB_REPOSITORY/issues/$Number/comments?per_page=$per&page=$page"
     $items = Invoke-GhApi -Method 'GET' -Route $route -Fields @{}
+    Write-Host $items
     if (-not $items -or $items.Count -eq 0) { break }
     foreach ($c in $items) {
       if ($c.body -and $c.body.StartsWith($Marker)) {
@@ -99,7 +100,7 @@ function Invoke-GhApi {
     return $null
   }
   if ($json -and ($json.Trim().StartsWith('{') -or $json.Trim().StartsWith('['))) {
-    return $json | ConvertFrom-Json
+    return ($json | ConvertFrom-Json)
   }
   return $null
 }
