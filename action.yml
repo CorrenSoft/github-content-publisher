@@ -6,39 +6,39 @@ branding:
   color: blue
 
 inputs:
-  channel:
-    description: "Target channel: pull-request | summary | check-run"
-    required: true
-  mode:
-    description: "Behavior: add | upsert | replace | append. For channel=check-run, mode is forced to upsert."
-    required: true
+  append-separator:
+    description: "Separator used when mode=append."
+    required: false
+    default: ""
   body:
     description: "Message body (Markdown/text). If provided, takes precedence over body-file."
     required: false
   body-file:
     description: "Path to a file containing the message body."
     required: false
-  marker-id:
-    description: "Optional marker id used to identify a sticky message."
-    required: false
-  pr-number:
-    description: "Optional pull request number override."
-    required: false
-  append-separator:
-    description: "Separator used when mode=append."
-    required: false
-    default: "\n\n---\n\n"
-  garbage-collector:
-    description: "If true, delete duplicates of the same marker (keeps the most recent)."
-    required: false
-    default: false
+  channel:
+    description: "Target channel: pull-request | summary | check-run"
+    required: true
   fail-on-error:
     description: "If false, do not fail the job on publishing error."
     required: false
     default: true
+  garbage-collector:
+    description: "If true, delete duplicates of the same marker (keeps the most recent)."
+    required: false
+    default: false
   github-token:
     description: "Optional token to override default GITHUB_TOKEN/GH_TOKEN."
     required: false
+  pr-number:
+    description: "Optional pull request number override."
+    required: false
+  marker-id:
+    description: "Optional marker id used to identify a sticky message."
+    required: false
+  mode:
+    description: "Behavior: add | upsert | replace | append. For channel=check-run, mode is forced to upsert."
+    required: true
 
 outputs:
   published:

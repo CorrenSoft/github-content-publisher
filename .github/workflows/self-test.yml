@@ -75,4 +75,4 @@ jobs:
           marker-id: self-test
           garbage-collector: true
           body: |
-            **Content Publisher** self-test. This is an idempotent PR comment in replace mode.
+            **Content Publisher** self-test. This is an idempotent PR comment in replace mode with garbage collector active.
