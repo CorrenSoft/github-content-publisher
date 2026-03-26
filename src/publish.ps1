@@ -21,7 +21,7 @@ function Add-Marker {
 
 function Find-PRCommentByMarker {
   param([int]$Number, [string]$Marker)
-  Write-Host "Looking for comments."
+  Write-Host "Looking for comments in $Number with $Marker."
   $page = 1; $per = 100
   $found = $null
   $dups = @()
@@ -182,7 +182,8 @@ function Publish-PR {
     return
   }
 
-  $found, $duplicates = Find-PRCommentByMarker -Number $pr -Marker (Get-MarkerLine)
+  $marker = Get-MarkerLine
+  $found, $duplicates = Find-PRCommentByMarker -Number $pr -Marker $marker
   if ($GarbageCollector) {
     foreach ($d in $duplicates) {
       Write-Host "Deleting duplicates."
