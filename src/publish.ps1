@@ -145,6 +145,8 @@ function Publish-Summary {
 
 function Publish-PR {
   Write-Host "::group::PullRequest"
+  Write-Host $GarbageCollector
+  Write-Host $FailOnError
 
   $raw = Read-Body
 
@@ -182,9 +184,8 @@ function Publish-PR {
   $marker = Get-MarkerLine
   $found, $duplicates = Find-PRCommentByMarker -Number $pr -Marker $marker
 
-  Write-Host $GarbageCollector
   
-  if ($GarbageCollector) {
+  if ($GarbageCollector -eq $True) {
     foreach ($d in $duplicates) {
       Write-Host "Deleting duplicates."
       Invoke-GhApi -Method 'DELETE' -Route "repos/$env:GITHUB_REPOSITORY/issues/comments/$($d.id)" -Fields @{}
