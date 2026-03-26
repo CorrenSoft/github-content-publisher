@@ -43,7 +43,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v6
-      - name: Use local action (PR comment)
+      - name: Use local action (Add comment)
         uses: ./.
         with:
           channel: pull-request
@@ -51,7 +51,7 @@ jobs:
           marker-id: self-test
           body: |
             **Content Publisher** self-test. Add mode.
-      - name: Use local action (PR comment)
+      - name: Use local action (Append comment)
         uses: ./.
         with:
           channel: pull-request
@@ -59,7 +59,7 @@ jobs:
           marker-id: self-test
           body: |
             **Content Publisher** self-test. Add mode.
-      - name: Use local action (PR comment)
+      - name: Use local action (Upsert comment)
         uses: ./.
         with:
           channel: pull-request
@@ -67,7 +67,7 @@ jobs:
           marker-id: self-test
           body: |
             Hello from **Content Publisher** self-test. This is an idempotent PR comment.
-      - name: Use local action (PR comment)
+      - name: Use local action (Replace comment)
         uses: ./.
         with:
           channel: pull-request

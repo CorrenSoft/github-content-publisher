@@ -31,13 +31,26 @@ function Find-PRCommentByMarker {
     if (-not $items -or $items.Count -eq 0) { break }
     foreach ($c in $items) {
       if ($c.body -and $c.body.StartsWith($Marker)) {
-        if (-not $found) { $found = $c } else { $dups += $c }
+        if ( $found) {
+          $dups += $c 
+        }
+        else { 
+          $found = $c 
+        }
       }
     }
     if ($items.Count -lt $per) { break }
     $page++
   }
-  Write-Host "Found: $found"
+  if ($null -eq $found) {
+    Write-Host "Found comment $($found.id)."
+    if ($dups.Length -gt 0 ) {
+      Write-Host "Also found $($dups.Length) duplicated."
+    }
+  }
+  else {
+    Write-Host "Found no comment."
+  }
   return , @($found, $dups) 
 }
 
@@ -135,7 +148,13 @@ function Publish-Summary {
 
 function Publish-PR {
   Write-Host "::group::PullRequest"
-  $ctx = Get-RepoContext; if (-not $ctx) { return }
+
+  $raw = Read-Body
+
+  if ([string]::IsNullOrEmpty($raw)) { 
+    Write-ErrorOrWarning "Empty body for pull-request"
+    return 
+  }
 
   if ( $PrNumber) {
     $pr = $PrNumber 
@@ -151,13 +170,6 @@ function Publish-PR {
     return 
   }
 
-  $raw = Read-Body
-
-  if ([string]::IsNullOrEmpty($raw)) { 
-    Write-ErrorOrWarning "Empty body for pull-request"
-    return 
-  }
-
   $createBody = Add-Marker $raw 
   if ($Mode -eq 'add') {
     $created = Invoke-GhApi -Method 'POST' -Route "repos/$env:GITHUB_REPOSITORY/issues/$pr/comments" -Fields @{ 'body' = $createBody }
@@ -170,7 +182,7 @@ function Publish-PR {
     return
   }
 
-  $found, $duplicates = Find-PRCommentByMarker -Number $pr -Marker Get-MarkerLine 
+  $found, $duplicates = Find-PRCommentByMarker -Number $pr -Marker (Get-MarkerLine)
   if ($GarbageCollector) {
     foreach ($d in $duplicates) {
       Write-Host "Deleting duplicates."
@@ -242,7 +254,7 @@ function Publish-CheckRun {
 
   $summary = Read-Body
   if ([string]::IsNullOrEmpty($summary)) { 
-    Write-ErrorOrWarning "Empty body for check-run"
+    Write-ErrorOrWarning "Empty body for check-run."
     return 
   }
 
