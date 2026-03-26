@@ -48,7 +48,7 @@ function Find-PRCommentByMarker {
 
   Write-Host "Found $($dups.Length) duplicated."
   
-  return , @($found, $dups) 
+  return $found, $dups
 }
 
 function Get-EventPayload {
@@ -145,8 +145,6 @@ function Publish-Summary {
 
 function Publish-PR {
   Write-Host "::group::PullRequest"
-  Write-Host $GarbageCollector
-  Write-Host $FailOnError
 
   $raw = Read-Body
 
@@ -183,10 +181,9 @@ function Publish-PR {
 
   $marker = Get-MarkerLine
   $found, $duplicates = Find-PRCommentByMarker -Number $pr -Marker $marker
-
   
   if ($GarbageCollector -eq $True) {
-    Write-Host "Garbage collector active."
+    Write-Host "Garbage collector active and $($duplicates.Length) to delete."
     foreach ($d in $duplicates) {
       Write-Host "Deleting $($d.id)"
       $rsp = Invoke-GhApi -Method 'DELETE' -Route "repos/$env:GITHUB_REPOSITORY/issues/comments/$($d.id)" -Fields @{}
