@@ -74,5 +74,5 @@ runs:
           -MarkerId '${{ inputs.marker-id }}' `
           -PrNumber '${{ inputs.pr-number }}' `
           -AppendSeparator '${{ inputs.append-separator }}' `
-          -FailOnError:$failOnError `
-          -GarbageCollector:$gcEnabled
+          -FailOnError $failOnError `
+          -GarbageCollector $gcEnabled

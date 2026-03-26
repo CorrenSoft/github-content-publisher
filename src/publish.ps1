@@ -181,6 +181,9 @@ function Publish-PR {
 
   $marker = Get-MarkerLine
   $found, $duplicates = Find-PRCommentByMarker -Number $pr -Marker $marker
+
+  Write-Host $GarbageCollector
+  
   if ($GarbageCollector) {
     foreach ($d in $duplicates) {
       Write-Host "Deleting duplicates."
