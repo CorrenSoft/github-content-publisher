@@ -5,34 +5,34 @@ Publish content to GitHub surfaces with modes `add | upsert | replace | append`,
 Channels supported:
 
 - `pull-request` → sticky or non-sticky **PR comment**.
-- `summary` → **Job Summary** (`$GITHUB_STEP_SUMMARY`) of the current job.
-- `check-run` → always **upsert** a **Check Run** output for the current commit (uses the body as the check’s summary).
+- `summary` → **Job Summary** of the current job.
+- `check-run` → updates the title of the of the check-run of the current job (when is used for validation).
 
 ## Inputs
 
 - `channel` (required): `pull-request | summary | check-run`
 - `mode` (required): `add | upsert | replace | append`
-  - For `check-run`, the effective mode is always `upsert`.
 - `body` (optional): inline content (Markdown).
 - `body-file` (optional): file path to read the content from. If both `body` and `body-file` are set, `body` wins.
 - `marker-id` (optional): used to identify the message (sticky). If not set, an auto-generated marker is used.
 - `pr-number` (optional): overrides PR autodetection.
-- `append-separator` (optional, default `\n\n---\n\n`): used in `append` mode.
-- `garbage-collector` (optional, default `false`): when `true`, removes duplicate entries with the same marker (keeps the most recent). Not applicable to `check-run` bacause deletion is not supported by the API.
-- `fail-on-error` (optional, default `true`)
+- `append-separator` (optional): used in `append` mode to separate existing content from the new one. 
+- `garbage-collector` (optional, default `false`): when `true`, removes duplicate entries with the same marker (keeps the most recent).
+- `fail-on-error` (optional, default `true`). When `false`, the Action will not fail if the publication fails (e.g. due to API limits), but will log the error instead.
 - `github-token` (optional): override token; by default uses `GITHUB_TOKEN`.
 
 ## Outputs
 
-- `published`: `true|false`
-- `channel`: echo of the selected channel
+- `published`: `true|false`.
+- `channel`: echo of the selected channel.
 - `resource-id`: `comment_id` or `check_run_id` when applicable
-- `mode-effective`: the resolved mode (`upsert` for `check-run`)
+- `mode-effective`: the resolved mode.
 
 ## Permissions
 
-- `pull-request`: default `GITHUB_TOKEN` is enough in same-repo PRs. For PRs from forks, use safe patterns (`pull_request_target`) if you need to comment with write permissions.
 - `check-run`: requires `permissions: checks: write`.
+- `pull-request`: requires `permissions: issues: write`.
+- `summary`: requires no additional permissions.
 
 ## Examples
 
@@ -57,9 +57,7 @@ with:
     channel: pull-request
     mode: append
     marker-id: coverage
-    append-separator: |
-     
-
+    append-separator: '\n\n---\n\n'
     body: |
       - Added coverage for module X
 ```
@@ -87,12 +85,35 @@ steps:
     uses: CorrenSoft/github-content-publisher@v0
     with:
       channel: check-run
-      mode: upsert            # ignored; always upsert
+      mode: upsert        
       body: |
-        All the tasks werre completed.
+        All the tasks were completed.
 ```
 
-## Notes
+## Extended behavior details
 
-- The marker is only added at the beginning on the first publication; subsequent append operations keep a single marker and add the separator + new content.
-- The Action do not attempt to parse or manipulate the content; it simply adds the marker and separator (when applies). Neither control the lenght of the content, which may cause API rejections if too long.
+- `pull-request`
+  - Creates or updates an issue comment on the PR identified by `pr-number` (explicit) or auto-detected from event payload.
+  - Uses a marker line (`<!-- content-publisher: ... -->`) from `marker-id` or repo context to identify and manage sticky comments.
+    - If missing, a marker is auto-generated based on workflow name to avoid conflicts across different usages. In scenarios with multiple comments (either by the same or by multiple workflows), using explicit `marker-id` is recommended for better management.
+  - `add`: always creates a new comment.
+  - `upsert`: updates the matching marker comment if found, otherwise creates a new one.
+  - `replace`: deletes the matched marker comment (if any), then creates a new one.
+  - `append`: adds new content to the matched marker comment (or creates it if missing).
+    - The marker is only added at the beginning on the first publication; subsequent append operations keep a single marker and add the separator + new content.
+    - A separator is added to, well, separate the new and the existing content. Is none is provided in `append-separator` parameter, the default is `\n\n---\n\n`.
+  - When `garbage-collector=true`, duplicate marker comments are deleted (keeps the first found match and removes rest). Not applicable in `add` mode. 
+
+- `summary`
+  - Writes the body to summary of the job.
+  - `mode` is ignored within this channel.
+
+- `check-run`
+  - Patches the output title/summary of the current job with provided body.
+  - The content is visible in the check-run details of the pull request, if the job is used to validate it.
+  - `mode` is ignored; effective mode is always `upsert`.
+
+- Content handling
+  - The content is taken from `body` or `body-file` and is used as-is, without any parsing or manipulation by the Action. 
+  - Any desired formatting must be applied before passing the content to the Action.
+  - The Action does not control the length of the content, which may cause API rejections if too long.
