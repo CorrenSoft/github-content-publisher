@@ -1,17 +1,78 @@
-name: Example Composite Action
-description: A starter composite action template
-
+name: Content Publisher
+description: "Publish content to GitHub surfaces with add/upsert/replace/append modes and optional garbage collector."
+author: CorrenSoft
+branding:
+  icon: message-square
+  color: blue
 
 inputs:
-  example-input:
-    description: "Example input"
+  append-separator:
+    description: "Separator used when mode=append."
     required: false
-    default: "hello"
+    default: ""
+  body:
+    description: "Message body (Markdown/text). If provided, takes precedence over body-file."
+    required: false
+  body-file:
+    description: "Path to a file containing the message body."
+    required: false
+  channel:
+    description: "Target channel: pull-request | summary | check-run"
+    required: true
+  fail-on-error:
+    description: "If false, do not fail the job on publishing error."
+    required: false
+    default: true
+  garbage-collector:
+    description: "If true, delete duplicates of the same marker (keeps the most recent)."
+    required: false
+    default: false
+  github-token:
+    description: "Optional token to override default GITHUB_TOKEN/GH_TOKEN."
+    required: false
+  pr-number:
+    description: "Optional pull request number override."
+    required: false
+  marker-id:
+    description: "Optional marker id used to identify a sticky message."
+    required: false
+  mode:
+    description: "Behavior: add | upsert | replace | append. For channel=check-run, mode is forced to upsert."
+    required: true
+
+outputs:
+  published:
+    description: "true if content was published/updated."
+  channel:
+    description: "Echo of the channel."
+  resource-id:
+    description: "Created/updated resource id."
+  mode-effective:
+    description: "Effective mode."
 
 runs:
   using: "composite"
   steps:
-    - name: Print input
-      shell: bash
+    - name: Run content publisher
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ inputs.github-token || github.token }}
+        GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
       run: |
-        echo "Input: ${{ inputs.example-input }}"
+        $ErrorActionPreference = 'Stop'
+        $scriptPath = Join-Path $Env:GITHUB_ACTION_PATH 'src/publish.ps1'
+
+        # Coerce booleans from inputs (strings) to proper $true/$false
+        $failOnError = [System.Boolean]::Parse("${{ inputs.fail-on-error }}")
+        $gcEnabled  = [System.Boolean]::Parse("${{ inputs.garbage-collector }}")
+
+        & $scriptPath `
+          -Channel '${{ inputs.channel }}' `
+          -Mode '${{ inputs.mode }}' `
+          -Body '${{ inputs.body }}' `
+          -BodyFile '${{ inputs.body-file }}' `
+          -MarkerId '${{ inputs.marker-id }}' `
+          -PrNumber '${{ inputs.pr-number }}' `
+          -AppendSeparator '${{ inputs.append-separator }}' `
+          -FailOnError $failOnError `
+          -GarbageCollector $gcEnabled

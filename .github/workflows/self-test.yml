@@ -1,0 +1,82 @@
+name: Self Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'src/**'
+      - 'action.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  summary-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use local action (summary)
+        uses: ./.
+        with:
+          channel: summary
+          mode: add
+          body: |
+            ### ✅ Content Publisher summary test
+            This is a sample summary written by the action.
+
+  check-run-test:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use local action (check-run)
+        uses: ./.
+        with:
+          channel: check-run
+          mode: upsert
+          marker-id: self-test
+          body: |
+            Check run content from self-test workflow.
+
+  pr-test:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use local action (Add comment)
+        uses: ./.
+        with:
+          channel: pull-request
+          mode: add
+          marker-id: self-test
+          body: |
+            **Content Publisher** self-test. Add mode.
+      - name: Use local action (Append comment)
+        uses: ./.
+        with:
+          channel: pull-request
+          mode: append
+          marker-id: self-test
+          body: |
+            **Content Publisher** self-test. Add mode.
+      - name: Use local action (Upsert comment)
+        uses: ./.
+        with:
+          channel: pull-request
+          mode: upsert
+          marker-id: self-test
+          body: |
+            Hello from **Content Publisher** self-test. This is an idempotent PR comment.
+      - name: Use local action (Replace comment)
+        uses: ./.
+        with:
+          channel: pull-request
+          mode: replace
+          marker-id: self-test
+          garbage-collector: true
+          body: |
+            **Content Publisher** self-test. This is an idempotent PR comment in replace mode with garbage collector active.
