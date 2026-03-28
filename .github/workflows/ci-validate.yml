@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'action.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read

@@ -104,14 +104,20 @@ steps:
     - A separator is added to, well, separate the new and the existing content. Is none is provided in `append-separator` parameter, the default is `\n\n---\n\n`.
   - When `garbage-collector=true`, duplicate marker comments are deleted (keeps the first found match and removes rest). Not applicable in `add` mode. 
 
+    ![pr-comment](./docs/img/pull-request.png)
+
 - `summary`
   - Writes the body to summary of the job.
   - `mode` is ignored within this channel.
+
+    ![summary](./docs/img/summary.png)
 
 - `check-run`
   - Patches the output title/summary of the current job with provided body.
   - The content is visible in the check-run details of the pull request, if the job is used to validate it.
   - `mode` is ignored; effective mode is always `upsert`.
+
+    ![check-run](./docs/img/check-run.png)
 
 - Content handling
   - The content is taken from `body` or `body-file` and is used as-is, without any parsing or manipulation by the Action. 
