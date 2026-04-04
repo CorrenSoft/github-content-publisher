@@ -103,6 +103,20 @@ steps:
 
 ## Extended behavior details
 
+- `annotation`
+  - Adds an `notice` annotation to the current job.
+  - The content is visible in the job details.
+  - `mode` is ignored; effective mode is always `add`.
+
+    ![annotation](./docs/img/annotation.png)
+
+- `check-run`
+  - Patches the output title/summary of the current job with provided body.
+  - The content is visible in the check-run details of the pull request, if the job is used to validate it.
+  - `mode` is ignored; effective mode is always `upsert`.
+
+    ![check-run](./docs/img/check-run.png)
+
 - `pull-request`
   - Creates or updates an issue comment on the PR identified by `pr-number` (explicit) or auto-detected from event payload.
   - Uses a marker line (`<!-- content-publisher: ... -->`) from `marker-id` or repo context to identify and manage sticky comments.
@@ -122,13 +136,6 @@ steps:
   - `mode` is ignored within this channel.
 
     ![summary](./docs/img/summary.png)
-
-- `check-run`
-  - Patches the output title/summary of the current job with provided body.
-  - The content is visible in the check-run details of the pull request, if the job is used to validate it.
-  - `mode` is ignored; effective mode is always `upsert`.
-
-    ![check-run](./docs/img/check-run.png)
 
 - Content handling
   - The content is taken from `body` or `body-file` and is used as-is, without any parsing or manipulation by the Action. 
