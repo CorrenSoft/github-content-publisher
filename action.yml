@@ -1,5 +1,5 @@
 name: Content Publisher
-description: "Publish content to GitHub surfaces with add/upsert/replace/append modes and optional garbage collector."
+description: "A utility GitHub Action to publish and update content across job summaries, pull requests, and check runs."
 author: CorrenSoft
 branding:
   icon: message-square
@@ -17,7 +17,7 @@ inputs:
     description: "Path to a file containing the message body."
     required: false
   channel:
-    description: "Target channel: pull-request | summary | check-run"
+    description: "Target channel: pull-request | summary | check-run | annotation"
     required: true
   fail-on-error:
     description: "If false, do not fail the job on publishing error."
@@ -30,25 +30,25 @@ inputs:
   github-token:
     description: "Optional token to override default GITHUB_TOKEN/GH_TOKEN."
     required: false
+  marker-id:
+    description: "Optional marker id used to identify a PR message."
+    required: false
+  mode:
+    description: "Behavior of the publication: add | upsert | replace | append. Only applicable to pull-request."
+    required: true
   pr-number:
     description: "Optional pull request number override."
     required: false
-  marker-id:
-    description: "Optional marker id used to identify a sticky message."
-    required: false
-  mode:
-    description: "Behavior: add | upsert | replace | append. For channel=check-run, mode is forced to upsert."
-    required: true
 
 outputs:
-  published:
-    description: "true if content was published/updated."
   channel:
     description: "Echo of the channel."
-  resource-id:
-    description: "Created/updated resource id."
   mode-effective:
     description: "Effective mode."
+  published:
+    description: "true if content was published/updated."
+  resource-id:
+    description: "Created/updated resource id."
 
 runs:
   using: "composite"

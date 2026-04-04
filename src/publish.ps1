@@ -123,6 +123,23 @@ function Write-OutputVar {
 }
 
 # ----- Channel implementations -----
+function Publish-Annotation {
+  $content = Read-Body
+
+  if ([string]::IsNullOrEmpty($content)) { 
+    Write-ErrorOrWarning "Empty body for Annotation"
+    return 
+  }
+
+  Write-Output "::notice title=Notice Summary::$content"
+
+  $content | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding UTF8
+
+  Write-OutputVar -Name 'published'       -Value 'true'
+  Write-OutputVar -Name 'channel'         -Value 'annotation'
+  Write-OutputVar -Name 'mode-effective'  -Value 'upsert'
+}
+
 function Publish-Summary {
   $content = Read-Body
 
@@ -140,7 +157,7 @@ function Publish-Summary {
 
   Write-OutputVar -Name 'published' -Value 'true'
   Write-OutputVar -Name 'channel'   -Value 'summary'
-  Write-OutputVar -Name 'mode-effective' -Value $Mode
+  Write-OutputVar -Name 'mode-effective' -Value 'upsert'
 }
 
 function Publish-PR {
@@ -259,9 +276,6 @@ function Publish-CheckRun {
     return 
   }
 
-  # Effective mode is always upsert
-  $effMode = 'upsert'
-
   $jobs = Invoke-GhApi -Method 'GET' -Route "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID/attempts/$env:GITHUB_RUN_ATTEMPT/jobs" 
 
   # Try to find the matching job
@@ -289,7 +303,7 @@ function Publish-CheckRun {
   }
   
   Write-OutputVar 'channel' 'check-run'
-  Write-OutputVar 'mode-effective' $effMode
+  Write-OutputVar 'mode-effective' 'upsert'
   Write-Host "::endgroup::"
 }
 
@@ -297,9 +311,10 @@ function Publish-CheckRun {
 
 try {
   switch ($Channel) {
-    'summary' { Publish-Summary }
-    'pull-request' { Publish-PR }
+    'annotation' { Publish-Annotation }
     'check-run' { Publish-CheckRun }
+    'pull-request' { Publish-PR }
+    'summary' { Publish-Summary }
     default { Write-ErrorOrWarning "Unknown channel '$Channel'" }
   }
 }
