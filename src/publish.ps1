@@ -124,14 +124,15 @@ function Write-OutputVar {
 
 # ----- Channel implementations -----
 function Publish-Annotation {
-  $content = Read-Body
+  [string]$content = Read-Body
 
   if ([string]::IsNullOrEmpty($content)) { 
     Write-ErrorOrWarning "Empty body for Annotation"
     return 
   }
 
-  Write-Output "::notice title=Notice Summary::$content"
+  $content = $content.ReplaceLineEndings("%0A")  
+  Write-Output "::notice::$content"
 
   Write-OutputVar -Name 'published'       -Value 'true'
   Write-OutputVar -Name 'channel'         -Value 'annotation'
