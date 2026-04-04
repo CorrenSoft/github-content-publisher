@@ -1,5 +1,5 @@
 param(
-  [Parameter(Mandatory = $true)][ValidateSet('pull-request', 'summary', 'check-run')]
+  [Parameter(Mandatory = $true)][ValidateSet('annotation', 'pull-request', 'summary', 'check-run')]
   [string]$Channel,
   [Parameter(Mandatory = $true)][ValidateSet('add', 'upsert', 'replace', 'append')]
   [string]$Mode,
