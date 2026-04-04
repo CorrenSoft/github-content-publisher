@@ -22,7 +22,7 @@ jobs:
           channel: annotation
           mode: add
           body: |
-            ### :warning: Content Publisher :warning:
+            Content Publisher ❗
             This is a sample text written by the action.
 
   summary-test:

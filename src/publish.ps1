@@ -133,8 +133,6 @@ function Publish-Annotation {
 
   Write-Output "::notice title=Notice Summary::$content"
 
-  $content | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding UTF8
-
   Write-OutputVar -Name 'published'       -Value 'true'
   Write-OutputVar -Name 'channel'         -Value 'annotation'
   Write-OutputVar -Name 'mode-effective'  -Value 'upsert'
