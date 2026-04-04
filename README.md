@@ -4,22 +4,22 @@ Publish content to GitHub surfaces with modes `add | upsert | replace | append`,
 
 Channels supported:
 
+- `annotation` → **Job Annotation** of the current job.
+- `check-run` → updates the title of the of the check-run of the current job (when is used for validation).
 - `pull-request` → sticky or non-sticky **PR comment**.
 - `summary` → **Job Summary** of the current job.
-- `check-run` → updates the title of the of the check-run of the current job (when is used for validation).
-
 ## Inputs
 
-- `channel` (required): `pull-request | summary | check-run`
+- `channel` (required): `annotation | check-run | pull-request | summary`
 - `mode` (required): `add | upsert | replace | append`
+- `append-separator` (optional): used in `append` mode to separate existing content from the new one. 
 - `body` (optional): inline content (Markdown).
 - `body-file` (optional): file path to read the content from. If both `body` and `body-file` are set, `body` wins.
+- `fail-on-error` (optional, default `true`). When `false`, the Action will not fail if the publication fails (e.g. due to API limits), but will log the error instead.
+- `garbage-collector` (optional, default `false`): when `true`, removes duplicate entries with the same marker (keeps the most recent).
+- `github-token` (optional): override token; by default uses `GITHUB_TOKEN`.
 - `marker-id` (optional): used to identify the message (sticky). If not set, an auto-generated marker is used.
 - `pr-number` (optional): overrides PR autodetection.
-- `append-separator` (optional): used in `append` mode to separate existing content from the new one. 
-- `garbage-collector` (optional, default `false`): when `true`, removes duplicate entries with the same marker (keeps the most recent).
-- `fail-on-error` (optional, default `true`). When `false`, the Action will not fail if the publication fails (e.g. due to API limits), but will log the error instead.
-- `github-token` (optional): override token; by default uses `GITHUB_TOKEN`.
 
 ## Outputs
 
@@ -30,6 +30,7 @@ Channels supported:
 
 ## Permissions
 
+- `annotation`: requires no additional permissions.
 - `check-run`: requires `permissions: checks: write`.
 - `pull-request`: requires `permissions: issues: write`.
 - `summary`: requires no additional permissions.
@@ -60,6 +61,16 @@ with:
     append-separator: '\n\n---\n\n'
     body: |
       - Added coverage for module X
+```
+### Job Annotation
+
+```yaml
+- name: Publish Job Annotation
+  uses: CorrenSoft/github-content-publisher@v0
+  with:
+    channel: annotation
+    mode: add
+    body: Added an annotation to the job.
 ```
 
 ### Job Summary
@@ -92,6 +103,20 @@ steps:
 
 ## Extended behavior details
 
+- `annotation`
+  - Adds an `notice` annotation to the current job.
+  - The content is visible in the job details.
+  - `mode` is ignored; effective mode is always `add`.
+
+    ![annotation](./docs/img/annotation.png)
+
+- `check-run`
+  - Patches the output title/summary of the current job with provided body.
+  - The content is visible in the check-run details of the pull request, if the job is used to validate it.
+  - `mode` is ignored; effective mode is always `upsert`.
+
+    ![check-run](./docs/img/check-run.png)
+
 - `pull-request`
   - Creates or updates an issue comment on the PR identified by `pr-number` (explicit) or auto-detected from event payload.
   - Uses a marker line (`<!-- content-publisher: ... -->`) from `marker-id` or repo context to identify and manage sticky comments.
@@ -111,13 +136,6 @@ steps:
   - `mode` is ignored within this channel.
 
     ![summary](./docs/img/summary.png)
-
-- `check-run`
-  - Patches the output title/summary of the current job with provided body.
-  - The content is visible in the check-run details of the pull request, if the job is used to validate it.
-  - `mode` is ignored; effective mode is always `upsert`.
-
-    ![check-run](./docs/img/check-run.png)
 
 - Content handling
   - The content is taken from `body` or `body-file` and is used as-is, without any parsing or manipulation by the Action. 

@@ -12,6 +12,19 @@ permissions:
   contents: read
 
 jobs:
+  annotation-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use local action (Annotation)
+        uses: ./.
+        with:
+          channel: annotation
+          mode: add
+          body: |
+            Content Publisher❗ 
+            This is a sample text written by the action.
+
   summary-test:
     runs-on: ubuntu-latest
     steps:

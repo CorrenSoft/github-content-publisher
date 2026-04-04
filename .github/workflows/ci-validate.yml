@@ -23,6 +23,7 @@ jobs:
             rules:
               document-start: disable
               line-length: disable
+              trailing-spaces: disable
 
   ps-lint:
     name: PSScriptAnalyzer (PowerShell)
