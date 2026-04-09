@@ -190,6 +190,9 @@ function Publish-PR {
       Write-OutputVar 'published' 'true'
       Write-OutputVar 'resource-id' "$($created.id)"
     }
+    else {
+      Write-OutputVar 'published' 'false'
+    }
     Write-OutputVar 'channel' 'pull-request'
     Write-OutputVar 'mode-effective' 'add'
     return
@@ -222,6 +225,9 @@ function Publish-PR {
         Write-OutputVar 'resource-id' "$($rsp.id)"
         Write-OutputVar 'published' 'true'
       }
+      else {
+        Write-OutputVar 'published' 'false'
+      }
       Write-OutputVar 'mode-effective' 'upsert'
     }
     'replace' {
@@ -233,6 +239,9 @@ function Publish-PR {
       if ($rsp) { 
         Write-OutputVar 'resource-id' "$($rsp.id)"
         Write-OutputVar 'published' 'true' 
+      }
+      else {
+        Write-OutputVar 'published' 'false'
       }
       Write-OutputVar 'mode-effective' 'replace'
     }
@@ -254,6 +263,9 @@ function Publish-PR {
       if ($rsp) { 
         Write-OutputVar 'resource-id' "$($rsp.id)"
         Write-OutputVar 'published' 'true' 
+      }
+      else {
+        Write-OutputVar 'published' 'false'
       }
       Write-OutputVar 'mode-effective' 'append'
     }
@@ -277,6 +289,11 @@ function Publish-CheckRun {
 
   $jobs = Invoke-GhApi -Method 'GET' -Route "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID/attempts/$env:GITHUB_RUN_ATTEMPT/jobs" 
 
+  if ($null -eq $jobs) {
+    Write-Error "Failed to retrieve current job."
+    return
+  }
+
   # Try to find the matching job
   $match = $jobs.jobs |
   Where-Object {
@@ -299,6 +316,9 @@ function Publish-CheckRun {
   if ($crt) {
     Write-OutputVar 'published' 'true'
     Write-OutputVar 'resource-id' "$($crt.id)"
+  }
+  else {
+    Write-OutputVar 'published' 'false'
   }
   
   Write-OutputVar 'channel' 'check-run'
